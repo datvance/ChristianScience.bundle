@@ -1,4 +1,4 @@
-DEBUG = True
+DEBUG = False
 
 PREFIX = '/video/christianscience'
 NAME = L('Title')

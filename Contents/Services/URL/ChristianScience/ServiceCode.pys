@@ -1,4 +1,4 @@
-DEBUG = True
+DEBUG = False
 CS_DOT_COM = 'http://www.christianscience.com'
 SUNDAY_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/online-sunday-services'
 WEDNESDAY_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/online-wednesday-meetings'
