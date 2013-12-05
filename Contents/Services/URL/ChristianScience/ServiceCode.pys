@@ -1,0 +1,96 @@
+DEBUG = True
+CS_DOT_COM = 'http://www.christianscience.com'
+SUNDAY_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/online-sunday-services'
+WEDNESDAY_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/online-wednesday-meetings'
+THANKSGIVING_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/thanksgiving-day-service'
+
+YT_URL = 'http://www.youtube.com/embed/'
+YT_THUMB_URL = 'https://i1.ytimg.com/vi/%s/hqdefault.jpg'
+DURATION_RE = Regex('\[(\d+) mins.*?\]')
+
+DAILY_LIFT = '/your-daily-lift/'
+DAILY_LIFT_SRC_RE = Regex('file: "(.*?)",')
+
+
+####################################################################################################
+def NormalizeURL(url):
+
+    uri = url.split('://')[1]
+    if uri.find('www.') < 0:
+        uri = 'www.' + uri
+
+    return 'http://' + uri
+
+
+####################################################################################################
+def MetadataObjectForURL(url):
+
+    log('MetadataObjectForURL('+url+')')
+
+    if url.find(DAILY_LIFT) > 0:
+
+        media_details = GetDailyLift(url)
+
+        return TrackObject(
+                title=media_details['title'],
+                summary=media_details['summary'],
+                thumb=media_details['thumb'],
+                originally_available_at=media_details['date'],
+                duration=media_details['duration']
+        )
+
+
+####################################################################################################
+def MediaObjectsForURL(url):
+
+    log('MediaObjectsForURL('+url+')')
+
+    if url.find(DAILY_LIFT) > 0:
+
+        return [
+                MediaObject(
+                    audio_codec=AudioCodec.MP3,
+                    parts=[PartObject(key=Callback(PlayLift, url=url, ext='mp3'))]
+                )
+        ]
+
+
+####################################################################################################
+def PlayLift(url):
+
+    media_details = GetDailyLift(url)
+    log('Play: %s' % media_details['src'])
+
+    return Redirect(media_details['src'])
+
+
+def GetDailyLift(url):
+
+    log("GetDailyLift(" + url + ")")
+
+    page = HTML.ElementFromURL(url)
+    source = HTML.StringFromElement(page)
+
+    src = DAILY_LIFT_SRC_RE.search(source).group(1)
+    summary_text = page.xpath('//p[@class="byline"]')[0]
+    summary = ' '.join(summary_text.xpath('.//text()')).split('.')[0].strip()
+    thumb_el = page.xpath('//div[@class="cover-image"]/img')[0]
+    thumb = CS_DOT_COM + thumb_el.get('src')
+    title = thumb_el.get('title')
+    date = None
+    try:
+        day = page.xpath('//span[@class="dateline"]/text()')
+        date = Datetime.ParseDate(day.text).date()
+    except:
+        pass
+
+    details = {'date': date, 'duration': 120000, 'src': src, 'summary': summary, 'thumb': thumb, 'title': title}
+
+    log(str(details))
+
+    return details
+
+
+def log(str):
+    if DEBUG:
+        Log.Debug(str)
