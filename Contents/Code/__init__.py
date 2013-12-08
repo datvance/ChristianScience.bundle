@@ -11,6 +11,7 @@ DAILY_LIFT_URL = CS_DOT_COM + '/prayer-and-health/inspirational-media/your-daily
 
 ART = R('art-default.jpg')
 ICON = R('icon-default.jpg')
+SERVICE_ICON = R('services.jpg')
 
 ESPANOL = unicode("Videos en Español", 'UTF-8')
 
@@ -32,11 +33,11 @@ def Start():
 
     # Set the default ObjectContainer attributes
     ObjectContainer.title1 = NAME
-    ObjectContainer.art = R(ART)
+    ObjectContainer.art = ART
     ObjectContainer.view_group = "List"
 
-    DirectoryObject.thumb = R(ICON)
-    VideoClipObject.thumb = R(ICON)
+    DirectoryObject.thumb = ICON
+    VideoClipObject.thumb = ICON
 
     # Set the default cache time
     HTTP.CacheTime = CACHE_1HOUR
@@ -56,7 +57,7 @@ def MainMenu():
                                title=YT_PLAYLISTS[item]['title'],
                                thumb=thumb))
 
-    #oc.add(DirectoryObject(key=Callback(Services), title="Mother Church Services", thumb=R('services.jpg')))
+    oc.add(DirectoryObject(key=Callback(Services), title="Church Services", thumb=SERVICE_ICON))
     #oc.add(DirectoryObject(key=Callback(Thinkers), title="Time4Thinkers", thumb=R(ICON)))
 
     return oc
@@ -103,11 +104,11 @@ def DailyLift(page=1):
 @route(PREFIX + '/services')
 def Services():
 
-    oc = ObjectContainer(view_group="InfoList", title1="Daily Lift")
-    return oc
-    oc.add(VideoClipObject(url=SUNDAY_URL, title="Sunday Service", thumb=R(ICON)))
-    oc.add(VideoClipObject(url=WEDNESDAY_URL, title="Wednesday Testimony Meeting", thumb=R(ICON)))
-    oc.add(VideoClipObject(url=THANKSGIVING_URL, title="Thanksgiving Service", thumb=R(ICON)))
+    oc = ObjectContainer(view_group="InfoList", title1="Church Services")
+
+    oc.add(TrackObject(url=SUNDAY_URL, title="Sunday Service", thumb=SERVICE_ICON))
+    oc.add(TrackObject(url=WEDNESDAY_URL, title="Wednesday Meeting", thumb=SERVICE_ICON))
+    #oc.add(TrackObject(url=THANKSGIVING_URL, title="Thanksgiving Service", thumb=SERVICE_ICON))
 
     return oc
 

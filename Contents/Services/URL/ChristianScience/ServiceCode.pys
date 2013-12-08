@@ -1,8 +1,5 @@
-DEBUG = False
+DEBUG = True
 CS_DOT_COM = 'http://www.christianscience.com'
-SUNDAY_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/online-sunday-services'
-WEDNESDAY_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/online-wednesday-meetings'
-THANKSGIVING_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-in-boston-ma-usa/sunday-church-services-and-wednesday-testimony-meetings/thanksgiving-day-service'
 
 YT_URL = 'http://www.youtube.com/embed/'
 YT_THUMB_URL = 'https://i1.ytimg.com/vi/%s/hqdefault.jpg'
@@ -10,6 +7,11 @@ DURATION_RE = Regex('\[(\d+) mins.*?\]')
 
 DAILY_LIFT = '/your-daily-lift/'
 DAILY_LIFT_SRC_RE = Regex('file: "(.*?)",')
+
+SUNDAY_SERVICE = 'online-sunday-services'
+WEDNESDAY_SERVICE = 'online-wednesday-meetings'
+SERVICE_SRC_RE = Regex('playerSource = "(.*?)",')
+SERVICE_ICON = "http://christianscience.com/var/cscom/storage/images/media/images/onair_logo_markonly/128132-1-eng-US/onair_logo_markonly_medium.jpg"
 
 
 ####################################################################################################
@@ -27,11 +29,9 @@ def MetadataObjectForURL(url):
 
     log('MetadataObjectForURL('+url+')')
 
-    if url.find(DAILY_LIFT) > 0:
+    media_details = GetMediaDetails(url)
 
-        media_details = GetDailyLift(url)
-
-        return TrackObject(
+    return TrackObject(
                 title=media_details['title'],
                 summary=media_details['summary'],
                 thumb=media_details['thumb'],
@@ -47,23 +47,78 @@ def MediaObjectsForURL(url):
 
     if url.find(DAILY_LIFT) > 0:
 
-        return [
-                MediaObject(
-                    audio_codec=AudioCodec.MP3,
-                    parts=[PartObject(key=Callback(PlayLift, url=url, ext='mp3'))]
-                )
-        ]
+        audio = AudioCodec.MP3
+        ext = 'mp3'
+
+    elif url.find(SUNDAY_SERVICE) > 0 or url.find(WEDNESDAY_SERVICE) > 0:
+
+        audio = AudioCodec.AAC
+        ext = 'm4a'
+
+    return [
+            MediaObject(
+                audio_codec=audio,
+                parts=[PartObject(key=Callback(PlayAudio, url=url, ext=ext))]
+            )
+    ]
 
 
 ####################################################################################################
-def PlayLift(url):
+def PlayAudio(url):
 
-    media_details = GetDailyLift(url)
+    media_details = GetMediaDetails(url)
     log('Play: %s' % media_details['src'])
 
     return Redirect(media_details['src'])
 
 
+####################################################################################################
+def GetMediaDetails(url):
+
+    if url.find(DAILY_LIFT) > 0:
+        media_details = GetDailyLift(url)
+    elif url.find(SUNDAY_SERVICE) > 0 or url.find(WEDNESDAY_SERVICE) > 0:
+        media_details = GetChurchService(url)
+    else:
+        media_details = {}
+
+    log(str(media_details))
+
+    return media_details
+
+
+####################################################################################################
+def GetChurchService(url):
+
+    log("GetChurchService(" + url + ")")
+
+    page = HTML.ElementFromURL(url)
+    source = HTML.StringFromElement(page)
+    src = SERVICE_SRC_RE.search(source).group(1)
+
+    today = Datetime.Now()
+    if url.find(SUNDAY_SERVICE) > 0:
+        date = today + Datetime.Delta(days=-today.weekday() - 1)
+        summary = "Recording of this week's Sunday Church Service at The Mother Church, The First Church of Christ, " \
+                  "Scientist. The service lasts one hour and an organ prelude and postlude extend 7-10 minutes before " \
+                  "and after the service."
+    elif url.find(WEDNESDAY_SERVICE) > 0:
+        offset = (today.weekday() - 2) % 7
+        date = today - Datetime.Delta(days=offset)
+        summary = "Recording of this week's Wednesday Testimony Meeting at The Mother Church, The First Church of " \
+                  "Christ, Scientist."
+
+    details = {'date': date,
+               'duration': 4800000,
+               'src': src,
+               'summary': summary,
+               'thumb': SERVICE_ICON,
+               'title': 'Sunday Service'}
+
+    return details
+
+
+####################################################################################################
 def GetDailyLift(url):
 
     log("GetDailyLift(" + url + ")")
@@ -86,11 +141,10 @@ def GetDailyLift(url):
 
     details = {'date': date, 'duration': 120000, 'src': src, 'summary': summary, 'thumb': thumb, 'title': title}
 
-    log(str(details))
-
     return details
 
 
+####################################################################################################
 def log(str):
     if DEBUG:
         Log.Debug(str)
