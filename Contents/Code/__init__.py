@@ -10,7 +10,7 @@ THANKSGIVING_URL = CS_DOT_COM + '/church-of-christ-scientist/the-mother-church-i
 DAILY_LIFT_URL = CS_DOT_COM + '/prayer-and-health/inspirational-media/your-daily-lift'
 
 ART = R('art-default.jpg')
-ICON = R('icon-default.jpg')
+ICON = R('icon-default.png')
 SERVICE_ICON = R('services.jpg')
 
 ESPANOL = unicode("Videos en Español", 'UTF-8')

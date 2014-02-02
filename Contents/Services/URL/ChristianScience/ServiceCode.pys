@@ -53,7 +53,10 @@ def MediaObjectsForURL(url):
     elif url.find(SUNDAY_SERVICE) > 0 or url.find(WEDNESDAY_SERVICE) > 0:
 
         audio = AudioCodec.AAC
-        ext = 'm4a'
+        if Client.Platform == "Roku":
+            ext = 'mp4'
+        else:
+            ext = 'm4a'
 
     return [
             MediaObject(
